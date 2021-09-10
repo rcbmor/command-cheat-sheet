@@ -69,18 +69,79 @@ server {
 }
 
 ```
-# How to test
+# How to test/show certificates
 
 ```
 # Test with ECDSA cipher
 $ openssl s_client -host example.site -port 443 -cipher ECDHE-ECDSA-AES128-GCM-SHA256 2>&1 < /dev/null | \
     sed -n '/-----BEGIN/,/-----END/p' | \
-    openssl x509 -noout -text
+    openssl x509 -noout -text -fingerprint -sha256
 ```
 ```
 # Test with RSA cipher
 openssl s_client -host example.site -port 443 -cipher ECDHE-RSA-AES128-GCM-SHA256 2>&1 < /dev/null | \
     sed -n '/-----BEGIN/,/-----END/p' | \
-    openssl x509 -noout -text
+    openssl x509 -noout -text -fingerprint -sha256
 
 ```
+# Extract certificates
+
+## Only the certificate:
+```
+echo | openssl s_client -connect example.com:443 2>&1 | sed --quiet '/-BEGIN ↩
+CERTIFICATE-/,/-END CERTIFICATE-/p' > example.crt
+```
+
+## Chain (-showcerts)
+```
+echo | openssl s_client -showcerts -connect example.com:443 2>&1 | sed --quiet ↩
+'/-BEGIN CERTIFICATE-/,/-END CERTIFICATE-/p' > example.chain
+```
+
+# Check fingerprints
+```
+echo | openssl s_client -connect example.com:443 2>&1 | openssl x509 -noout ↩
+-fingerprint -sha256 | sed 's/://g' | tr '[:upper:]' '[:lower:]' | sed 's/sha256 ↩
+fingerprint=//g'
+```
+# Testing Cipher Suite Configuration
+```
+# TLS_AES_128_GCM_SHA256
+echo | openssl s_client -connect example.com:443 -tls1_3 -ciphersuites TLS_AES↩
+_128_GCM_SHA256 2>/dev/null| grep New
+
+# AESGCM
+echo | openssl s_client -connect example.com:443 -no_tls1_3 -cipher AESGCM ↩
+2>/dev/null | grep New
+
+```
+
+# Testing Cipher Suite Preference
+```
+# initiate two connections, first offering one of the suites as your first choice, then the other:
+
+echo | openssl s_client -connect example.com:443 -tls1_3 -ciphersuites 'TLS_AES↩
+_128_GCM_SHA256:TLS_AES_256_GCM_SHA384' 2>/dev/null | grep New
+New, TLSv1.3, Cipher is TLS_AES_128_GCM_SHA256
+
+echo | openssl s_client -connect example.com:443 -tls1_3 ↩
+-ciphersuites 'TLS_AES_256_GCM_SHA384:TLS_AES_128_GCM_SHA256' 2>/dev/null | grep New
+New, TLSv1.3, Cipher is TLS_AES_256_GCM_SHA384
+
+```
+* If you see the same suite negotiated on both connections, that means that the server is configured to actively select negotiated suites. Otherwise, it isn’t.
+
+```
+echo | openssl s_client -connect example.com:443 -no_tls1_3 -cipher ↩
+'ECDHE+AESGCM RSA' 2>/dev/null | grep New
+New, TLSv1.2, Cipher is ECDHE-ECDSA-AES128-GCM-SHA256
+
+echo | openssl s_client -connect example.com:443 -no_tls1_3 -cipher ↩
+'ECDHE+AESGCM RSA +ECDHE' 2>/dev/null | grep New
+New, TLSv1.2, Cipher is ECDHE-ECDSA-AES128-GCM-SHA256
+
+```
+
+# References:
+- https://www.feistyduck.com/library/openssl-cookbook/online/ch-testing-with-openssl.html
+
