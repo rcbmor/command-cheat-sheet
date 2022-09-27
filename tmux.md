@@ -3,16 +3,16 @@
 ## Sessions
 ```
 tmux
+tmux ls
+tmux list-sessions
+tmux attach
 tmux new
-tmux new-session
 tmux new -s mysession
 tmux kill-session -t mysession
 tmux kill-session -a
 Start a new session: :new
 Rename session: Ctrl + b $
 Detach from session: Ctrl + b d
-tmux ls
-tmux list-sessions
 Show all sessions: Ctrl + b s
 ```
 
