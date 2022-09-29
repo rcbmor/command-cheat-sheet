@@ -35,3 +35,13 @@
 `docker login my.registry.com:8000`
 - push image
 `docker push myrepo/myalpine:3.4`
+
+# Save image
+- get the container id
+`docker ps`
+- commit container state
+`docker commit <container_id>  vendor/image:version`
+- list images to find the committed state
+`docker images`
+
+
