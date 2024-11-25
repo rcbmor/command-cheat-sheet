@@ -143,5 +143,6 @@ New, TLSv1.2, Cipher is ECDHE-ECDSA-AES128-GCM-SHA256
 ```
 
 # References:
+- Seriously, stop using RSA https://blog.trailofbits.com/2019/07/08/fuck-rsa/
 - https://www.feistyduck.com/library/openssl-cookbook/online/ch-testing-with-openssl.html
 
